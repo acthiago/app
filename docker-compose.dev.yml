@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  # Backend FastAPI (Development)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ecosystem_backend_dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/.venv  # Não montar venv do host
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ecosystem_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: ecosystem_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - ecosystem_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Redis Commander (Interface gráfica para Redis)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ecosystem_redis_commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - ecosystem_network
+    restart: unless-stopped
+
+networks:
+  ecosystem_network:
+    driver: bridge
+
+volumes:
+  redis_data_dev:
+    driver: local

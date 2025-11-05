@@ -1,0 +1,74 @@
+# Virtual environments
+.venv
+venv
+env
+ENV
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing
+.pytest_cache
+htmlcov
+.coverage
+.coverage.*
+*.cover
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation (já estão no código)
+*.md
+!README.md
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Logs
+*.log
+logs/
+/tmp
+
+# Environment variables (usar env_file no docker-compose)
+.env.local
+.env.*.local
+
+# Node (se houver)
+node_modules
+npm-debug.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# Test files
+test_*.py
+*_test.py
+
+# Uploads (usar volume)
+uploads/

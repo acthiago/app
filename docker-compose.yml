@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  # Backend FastAPI
+  backend:
+    image: acthiago/api-bff-ecossistema:2.2.0
+    container_name: ecosystem_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads_data:/app/uploads
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - UPLOAD_DIR=/app/uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - n8n-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: ecosystem_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - n8n-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  n8n-net:
+    external: true
+
+volumes:
+  redis_data:
+    driver: local
+  uploads_data:
+    driver: local

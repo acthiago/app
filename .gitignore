@@ -1,0 +1,213 @@
+# ========================================
+# 🔒 Arquivos Confidenciais
+# ========================================
+
+# Variáveis de ambiente (contém senhas, tokens, secrets)
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+*.env
+
+# Configurações locais
+config.local.json
+secrets.json
+credentials.json
+
+
+# ========================================
+# 🐍 Python
+# ========================================
+
+# Ambiente virtual
+.venv/
+venv/
+env/
+ENV/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+
+# ========================================
+# 📁 Uploads e Arquivos Gerados
+# ========================================
+
+# Diretório de uploads (pode conter dados sensíveis)
+uploads/
+media/
+static/uploads/
+tmp/
+temp/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+
+# ========================================
+# 🗄️ Banco de Dados Local
+# ========================================
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# MongoDB dumps
+dump/
+*.bson
+
+
+# ========================================
+# 🔧 IDEs e Editores
+# ========================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+
+# ========================================
+# 💻 Sistema Operacional
+# ========================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+
+# ========================================
+# 🐳 Docker
+# ========================================
+
+# Docker volumes locais (se houver)
+docker-compose.override.yml
+.dockerignore.local
+
+
+# ========================================
+# 📝 Documentação Temporária/Local
+# ========================================
+
+# Documentos pessoais de desenvolvimento
+NOTES.md
+TODO_LOCAL.md
+SCRATCHPAD.md
+*.draft.md
+
+# Arquivos de teste local
+test_local.py
+scratch.py
+playground.py
+
+
+# ========================================
+# 🔑 Certificados e Chaves
+# ========================================
+
+# SSL/TLS
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# SSH
+id_rsa
+id_dsa
+*.pub
+
+
+# ========================================
+# 📦 Dependências
+# ========================================
+
+# Node modules (se houver frontend)
+node_modules/
+package-lock.json
+yarn.lock
+
+
+# ========================================
+# ☁️ Cloud e Deploy
+# ========================================
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
