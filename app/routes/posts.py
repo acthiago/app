@@ -7,6 +7,32 @@ from app.core.security import require_moderator
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
+
+async def update_channel_statistics(channel_name: str):
+    """
+    Atualiza as estatísticas de um canal (total_posts e success_rate)
+    """
+    from app.models.channel import Channel
+    
+    channel = await Channel.find_one({"name": channel_name})
+    if not channel:
+        return
+    
+    # Contar total de posts com status="success"
+    success_count = await Post.find({"channel": channel_name, "status": "success"}).count()
+    
+    # Contar total de posts (tentativas)
+    total_attempts = await Post.find({"channel": channel_name}).count()
+    
+    # Calcular success_rate
+    success_rate = (success_count / total_attempts * 100) if total_attempts > 0 else 0.0
+    
+    # Atualizar canal
+    channel.total_posts = success_count  # Apenas posts com sucesso
+    channel.success_rate = round(success_rate, 2)
+    channel.updated_at = datetime.utcnow()
+    await channel.save()
+
 @router.get("/")
 async def list_posts(
     enviado: Optional[bool] = None, 
@@ -14,17 +40,70 @@ async def list_posts(
     offer_id: Optional[str] = None,
     channel: Optional[str] = None
 ):
-    query = {}
-    if enviado is not None:
-        query["enviado"] = enviado
-    if status:
-        query["status"] = status
-    if offer_id:
-        query["offer_id"] = offer_id
-    if channel:
-        query["channel"] = channel
+    from app.models.offer import Offer
+    from pymongo import DESCENDING
     
-    posts = await Post.find(query).to_list()
+    # Construir match stage para filtros
+    match_stage = {}
+    if enviado is not None:
+        match_stage["enviado"] = enviado
+    if status:
+        match_stage["status"] = status
+    if offer_id:
+        match_stage["offer_id"] = offer_id
+    if channel:
+        match_stage["channel"] = channel
+    
+    # Pipeline de agregação com lookup para pegar título da oferta
+    pipeline = []
+    
+    # Adicionar filtros se existirem
+    if match_stage:
+        pipeline.append({"$match": match_stage})
+    
+    # Fazer lookup com a collection de ofertas
+    pipeline.extend([
+        {
+            "$addFields": {
+                "offer_id_obj": {"$toObjectId": "$offer_id"}
+            }
+        },
+        {
+            "$lookup": {
+                "from": "offers",
+                "localField": "offer_id_obj",
+                "foreignField": "_id",
+                "as": "offer_data"
+            }
+        },
+        # Extrair apenas o título da oferta
+        {
+            "$addFields": {
+                "offer_title": {
+                    "$arrayElemAt": ["$offer_data.title", 0]
+                }
+            }
+        },
+        # Remover campos temporários
+        {
+            "$project": {
+                "offer_data": 0,
+                "offer_id_obj": 0
+            }
+        },
+        # Ordenar por data de criação (mais recente primeiro)
+        {
+            "$sort": {"created_at": -1}
+        }
+    ])
+    
+    # Executar aggregation
+    posts = await Post.get_pymongo_collection().aggregate(pipeline).to_list(length=None)
+    
+    # Converter ObjectId para string no resultado
+    for post in posts:
+        post["_id"] = str(post["_id"])
+    
     return posts
 
 
@@ -35,8 +114,30 @@ async def update_post(post_id: PydanticObjectId, data: dict, moderator = Depends
     if not post:
         raise HTTPException(404, "Post não encontrado")
 
+    old_status = post.status
     update_data = {**data, "updated_at": datetime.utcnow()}
     await post.set(update_data)
+    
+    new_status = data.get("status", old_status)
+    
+    # Auto-aprovar oferta se o canal tiver auto_approve=True e o status for "success"
+    if new_status == "success":
+        from app.models.channel import Channel
+        from app.models.offer import Offer
+        
+        channel = await Channel.find_one({"name": post.channel})
+        if channel and channel.auto_approve:
+            # Buscar e aprovar a oferta
+            offer = await Offer.get(post.offer_id)
+            if offer and offer.status != "approved":
+                offer.status = "approved"
+                offer.updated_at = datetime.utcnow()
+                await offer.save()
+    
+    # Atualizar estatísticas do canal se o status mudou
+    if old_status != new_status:
+        await update_channel_statistics(post.channel)
+    
     return {"status": "updated", "id": str(post.id)}
 
 

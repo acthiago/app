@@ -7,6 +7,34 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
+## [2.2.2] - 2025-11-06
+
+### ✨ Novidades
+
+- **Extrator Amazon**
+  - Suporte completo a produtos da Amazon Brasil (amazon.com.br)
+  - Resolução automática de links encurtados (amzn.to)
+  - Extração de dados avançados:
+    - Título, preço, preço original, desconto
+    - Até 10 imagens em alta qualidade
+    - Avaliações (rating + número de reviews)
+    - Disponibilidade em estoque
+    - Categoria do produto
+    - Descrição do produto
+  - Novo arquivo: `app/services/offer_extractor/amazon.py`
+  - Factory atualizado para detectar domínios Amazon
+
+### 🔧 Melhorias
+
+- CORS configurado para aceitar conexões de qualquer origem (development)
+- Atualizado `factory.py` para suportar domínios `amazon.com.br` e `amzn.to`
+
+### 📚 Documentação
+
+- Script de teste adicionado: `test_amazon.py`
+
+---
+
 ## [2.2.1] - 2025-11-05
 
 ### 🔒 Segurança

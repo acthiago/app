@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -19,7 +20,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="Ecosystem Backend",
-    version="2.2.0",
+    version="2.2.2",
     description="Backend completo com JWT, cache Redis, rate limiting, logs estruturados, IA e gerenciamento de arquivos."
 )
 
@@ -28,15 +29,13 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configuração de CORS
+# Aceitar conexões de qualquer origem
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # Permite todas as origens
+    allow_credentials=False,  # Deve ser False quando allow_origins=["*"]
+    allow_methods=["*"],  # Permite todos os métodos (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Permite todos os headers
 )
 
 @app.on_event("startup")
@@ -69,6 +68,6 @@ app.include_router(files.router)
 
 @app.get("/")
 def root():
-    return {"message": "Ecosystem API Online 🚀", "version": "2.2.0"}
+    return {"message": "Ecosystem API Online 🚀", "version": "2.2.2"}
 
 

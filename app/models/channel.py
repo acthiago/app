@@ -22,6 +22,9 @@ class Channel(Document):
     # Configurações adicionais (flexível para cada tipo de canal)
     config: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Configurações adicionais em JSON")
     
+    # Auto-aprovação de ofertas
+    auto_approve: bool = Field(default=False, description="Se ofertas postadas neste canal devem ser auto-aprovadas")
+    
     # Estatísticas
     total_posts: int = Field(default=0, description="Total de posts enviados")
     success_rate: float = Field(default=0.0, ge=0, le=100, description="Taxa de sucesso (%)")

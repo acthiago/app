@@ -1,6 +1,22 @@
-# 🚀 Ecosystem Backend v2.2.1
+# 🚀 Ecosystem Backend v2.2.2
 
 Backend completo com JWT, Cache Redis, IA para categorização e tags, Histórico de Preços, **Gerenciamento de Arquivos**, **Sistema de Segurança Robusto** e muito mais!
+
+## 🛒 Plataformas Suportadas
+
+Extração automática de ofertas de:
+- 🟡 **Mercado Livre** (mercadolivre.com.br)
+- 🟠 **Shopee** (shopee.com.br)
+- 🔴 **AliExpress** (pt.aliexpress.com)
+- 🟢 **Amazon** (amazon.com.br + links amzn.to) ✨ NOVO
+
+## ✨ Novidades v2.2.2
+
+- 🟢 **Extrator Amazon**
+  - Suporte completo a produtos da Amazon Brasil
+  - Resolução automática de links encurtados (amzn.to)
+  - Extração de avaliações, reviews e disponibilidade
+  - Até 10 imagens por produto em alta qualidade
 
 ## ✨ Novidades v2.2.1
 
@@ -283,5 +299,5 @@ MIT
 
 ---
 
-**Versão**: 2.2.1  
-**Última atualização**: 2025-11-05
+**Versão**: 2.2.2  
+**Última atualização**: 2025-11-06
