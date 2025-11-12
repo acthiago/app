@@ -21,6 +21,7 @@ class Offer(Document):
     optimized_message: Optional[str] = None
     note: Optional[str] = None  # Avisos sobre limitações da extração
     status: str = "pending"
+    total_clicks: int = 0  # Contador de cliques na oferta
     created_at: datetime = datetime.utcnow()
     updated_at: datetime = datetime.utcnow()
 

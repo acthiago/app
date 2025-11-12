@@ -7,31 +7,222 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
-## [2.2.2] - 2025-11-06
+## [2.3.1] - 2025-11-12
 
 ### ✨ Novidades
 
-- **Extrator Amazon**
-  - Suporte completo a produtos da Amazon Brasil (amazon.com.br)
-  - Resolução automática de links encurtados (amzn.to)
-  - Extração de dados avançados:
+- **Extrator Kabum** 🆕
+  - Suporte completo para Kabum.com.br (5ª plataforma integrada)
+  - Resolução automática de links encurtados (tidd.ly → kabum.com.br)
+  - Extração de dados via JSON-LD (Schema.org) para máxima confiabilidade
+  - Dados extraídos:
     - Título, preço, preço original, desconto
+    - **Marca** (ex: SNAKE)
+    - **SKU/Código do produto** (ex: 503711)
+    - **Até 11 imagens de alta qualidade** (_gg.jpg, _g.jpg)
+    - **Avaliações completas** (nota + quantidade de reviews)
+    - Disponibilidade (Em estoque, Indisponível, Pré-venda)
+    - Descrição completa (limitada a 500 caracteres)
+    - Categoria via breadcrumb
+  - Filtragem automática de logos e imagens duplicadas
+  - Novo arquivo: `app/services/offer_extractor/kabum.py`
+  - Factory atualizado para detectar `kabum.com.br` e `tidd.ly`
+
+### 🔧 Melhorias
+
+- **Extração de Múltiplas Imagens Aprimorada**
+  - Sistema busca todas as tags `<img>` da página
+  - Normalização automática para alta qualidade (_gg.jpg ou _g.jpg)
+  - Remoção de duplicatas e logos
+  - Limite aumentado para 15 imagens por produto
+  - Ordenação consistente de resultados
+
+### 📚 Documentação
+
+- **Novo script de teste**: `test_kabum.py` - Validação completa do extrator Kabum
+- Documentação atualizada com Kabum como 5ª plataforma suportada
+
+### 🔄 Alterações Técnicas
+
+**Arquivos criados**:
+- `app/services/offer_extractor/kabum.py` - Extrator completo com JSON-LD
+
+**Arquivos modificados**:
+- `app/services/offer_extractor/factory.py` - Adicionada detecção de kabum.com.br e tidd.ly
+- `app/services/offer_extractor/__init__.py` - Exportando KabumExtractor
+
+### ✅ Testes
+
+Extrator Kabum validado com sucesso:
+- ✅ Resolução de links encurtados tidd.ly funcionando
+- ✅ Extração via JSON-LD (Schema.org) implementada
+- ✅ 11 imagens únicas de alta qualidade extraídas
+- ✅ Marca, SKU e avaliações sendo capturados
+- ✅ Descrição completa extraída (500 chars max)
+- ✅ Filtros de logos e duplicatas funcionando
+
+### 📦 Plataformas Suportadas
+
+- 🟡 **Mercado Livre** (mercadolivre.com.br)
+- 🟠 **Shopee** (shopee.com.br)
+- 🔴 **AliExpress** (pt.aliexpress.com)
+- 🟢 **Amazon** (amazon.com.br + amzn.to)
+- 🔵 **Kabum** (kabum.com.br + tidd.ly) ✨ **NOVO**
+
+---
+
+## [2.3.0] - 2025-11-10
+
+### ✨ Novidades - Fase 2: Sistema de Analytics
+
+- **Sistema Completo de Analytics** 📊
+  - 4 novos endpoints para rastreamento e métricas
+  - Rastreamento de cliques em ofertas com origem (home, ofertas, dashboard, etc)
+  - Rastreamento de visualizações de páginas
+  - Métricas detalhadas por oferta e resumo geral
+
+- **Novos Modelos**:
+  - `OfferClick` - Registra cliques em ofertas com IP, user-agent e origem
+  - `PageView` - Registra visualizações de páginas com IP e user-agent
+  - Campo `total_clicks: int` adicionado ao modelo `Offer`
+
+- **Novos Endpoints**:
+  - `POST /analytics/click` - Registrar clique em oferta (incrementa total_clicks)
+  - `POST /analytics/pageview` - Registrar visualização de página
+  - `GET /analytics/offer/{id}` - Métricas de oferta (total, por fonte, por dia, últimos 30 dias)
+  - `GET /analytics/summary` - Resumo geral (top 10 ofertas, páginas mais vistas, últimos 7 dias)
+
+### 🔧 Melhorias
+
+- Índices MongoDB criados para performance:
+  - `offer_clicks`: (offer_id + clicked_at), (source), (clicked_at)
+  - `page_views`: (page + viewed_at), (viewed_at)
+- Agregações MongoDB otimizadas para análises rápidas
+- Versão da API atualizada para `2.3.0`
+
+### 📚 Documentação
+
+- **Novo script de teste**: `test_phase2.py` - Validação completa do sistema de analytics
+- Endpoints públicos (não requerem autenticação) para facilitar integração frontend
+
+### 🔄 Alterações Técnicas
+
+**Arquivos criados**:
+- `app/models/offer_click.py` - Modelo para cliques
+- `app/models/page_view.py` - Modelo para pageviews  
+- `app/routes/analytics.py` - Router com 4 endpoints
+- `test_phase2.py` - Script de testes
+
+**Arquivos modificados**:
+- `app/models/offer.py` - Adicionado campo `total_clicks`
+- `app/core/database.py` - Registrados modelos OfferClick e PageView
+- `app/main.py` - Registrado router de analytics
+
+### ✅ Testes
+
+Sistema de analytics validado com sucesso:
+- ✅ 6 cliques registrados em teste
+- ✅ 6 pageviews registrados em teste
+- ✅ Agregações MongoDB funcionando (cliques por fonte, por dia, top ofertas)
+- ✅ Campo total_clicks incrementando corretamente
+- ✅ Métricas sendo calculadas em tempo real
+
+### 📊 Frontend Preparado
+
+O frontend v1.1.4 já está preparado com:
+- ✅ Hook `usePageView` para rastreamento automático
+- ✅ Função `trackOfferClick` para registro de cliques
+- ✅ Integração pronta nos componentes Home.tsx e PublicOffers.tsx
+
+---
+
+## [2.2.2] - 2025-11-09
+
+### ✨ Novidades
+
+- **Extrator Amazon** 🟢
+  - Suporte completo a produtos da Amazon Brasil (amazon.com.br)
+  - Resolução automática de links encurtados (amzn.to → URL completa)
+  - Extração de dados avançados:
+    - Título, preço atual, preço original, desconto percentual
     - Até 10 imagens em alta qualidade
     - Avaliações (rating + número de reviews)
     - Disponibilidade em estoque
     - Categoria do produto
     - Descrição do produto
+  - 3 métodos de fallback para extração de preços originais
   - Novo arquivo: `app/services/offer_extractor/amazon.py`
   - Factory atualizado para detectar domínios Amazon
+
+- **Issue #2: Auto-aprovação de Ofertas por Canal** ✅
+  - Novo campo `auto_approve: bool` no modelo `Channel`
+  - Ofertas postadas em canais com `auto_approve=True` são aprovadas automaticamente
+  - Lógica implementada no endpoint `PATCH /posts/{id}`
+  - Canal "Site" configurado com auto-aprovação ativa por padrão
+
+- **Issue #1: Contador de Posts e Estatísticas de Canais** 📊
+  - Nova função `update_channel_statistics(channel_name)` em `posts.py`
+  - Atualização automática de `total_posts` (contabiliza apenas posts com sucesso)
+  - Cálculo automático de `success_rate` (percentual de sucesso)
+  - Estatísticas atualizadas sempre que status de post muda
+
+- **Issue #3: Título da Oferta nos Posts** 🏷️
+  - Endpoint `GET /posts/` completamente reescrito
+  - Implementado MongoDB Aggregation Pipeline com `$lookup`
+  - Novo campo `offer_title` retornado em cada post
+  - Performance otimizada com `$project` para remover dados desnecessários
 
 ### 🔧 Melhorias
 
 - CORS configurado para aceitar conexões de qualquer origem (development)
-- Atualizado `factory.py` para suportar domínios `amazon.com.br` e `amzn.to`
+- Versão da API atualizada para `2.2.2` em todos os arquivos
+- Health check (`/health/detailed`) atualizado com feature `amazon_extractor: true`
+- Melhorias na extração de preços com múltiplos métodos de fallback
 
 ### 📚 Documentação
 
-- Script de teste adicionado: `test_amazon.py`
+- **Novos scripts de teste**:
+  - `test_amazon.py` - Teste completo do extrator Amazon com URLs encurtadas
+  - `test_phase1.py` - Validação das 3 issues implementadas
+- **BACKEND_ISSUES.md** - Documentação completa das issues e soluções implementadas
+- **CHANGELOG.md** - Histórico de mudanças detalhado
+- **README.md** - Atualizado com plataformas suportadas e versão 2.2.2
+
+### 🔄 Alterações Técnicas
+
+**Arquivos modificados**:
+- `app/models/channel.py` - Adicionado campo `auto_approve`
+- `app/routes/posts.py` - 3 grandes mudanças:
+  1. Função `update_channel_statistics()` para estatísticas de canais
+  2. `GET /posts/` com aggregation pipeline ($lookup com ofertas)
+  3. `PATCH /posts/{id}` com lógica de auto-aprovação
+- `app/services/offer_extractor/__init__.py` - Exportando `AmazonExtractor`
+- `app/services/offer_extractor/factory.py` - Suporte para domínios Amazon
+- `app/main.py` - Versão atualizada para 2.2.2
+- `app/routes/health.py` - Feature `amazon_extractor` adicionada
+- `docker-compose.yml` - Imagem atualizada para `acthiago/api-bff-ecossistema:2.2.2`
+
+**Arquivos criados**:
+- `app/services/offer_extractor/amazon.py` (242 linhas)
+- `test_amazon.py` (114 linhas)
+- `test_phase1.py` (157 linhas)
+- `BACKEND_ISSUES.md` (documentação completa das issues)
+
+### ✅ Testes
+
+Todos os testes da Fase 1 validados com sucesso:
+- ✅ Campo `auto_approve` presente no modelo Channel
+- ✅ Canal "Site" configurado com auto-aprovação ativa
+- ✅ Estatísticas de canais calculando corretamente (total_posts e success_rate)
+- ✅ Aggregation pipeline retornando `offer_title` em todos os posts
+- ✅ Extrator Amazon funcionando com links encurtados (amzn.to)
+
+### 📦 Plataformas Suportadas
+
+- 🟡 **Mercado Livre** (mercadolivre.com.br)
+- 🟠 **Shopee** (shopee.com.br)
+- 🔴 **AliExpress** (pt.aliexpress.com)
+- 🟢 **Amazon** (amazon.com.br + amzn.to) ✨ **NOVO**
 
 ---
 

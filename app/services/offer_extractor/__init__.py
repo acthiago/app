@@ -4,6 +4,7 @@ from .mercadolivre import MercadoLivreExtractor
 from .aliexpress import AliExpressExtractor
 from .shopee import ShopeeExtractor
 from .amazon import AmazonExtractor
+from .kabum import KabumExtractor
 
 __all__ = [
     'get_extractor',
@@ -11,5 +12,6 @@ __all__ = [
     'MercadoLivreExtractor',
     'AliExpressExtractor',
     'ShopeeExtractor',
-    'AmazonExtractor'
+    'AmazonExtractor',
+    'KabumExtractor'
 ]

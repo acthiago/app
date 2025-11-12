@@ -1,6 +1,6 @@
-# 🚀 Ecosystem Backend v2.2.2
+# 🚀 Ecosystem Backend v2.3.1
 
-Backend completo com JWT, Cache Redis, IA para categorização e tags, Histórico de Preços, **Gerenciamento de Arquivos**, **Sistema de Segurança Robusto** e muito mais!
+Backend completo com JWT, Cache Redis, IA para categorização e tags, Histórico de Preços, **Gerenciamento de Arquivos**, **Sistema de Analytics** e **Sistema de Segurança Robusto**!
 
 ## 🛒 Plataformas Suportadas
 
@@ -8,7 +8,30 @@ Extração automática de ofertas de:
 - 🟡 **Mercado Livre** (mercadolivre.com.br)
 - 🟠 **Shopee** (shopee.com.br)
 - 🔴 **AliExpress** (pt.aliexpress.com)
-- 🟢 **Amazon** (amazon.com.br + links amzn.to) ✨ NOVO
+- 🟢 **Amazon** (amazon.com.br + links amzn.to)
+- 🔵 **Kabum** (kabum.com.br + links tidd.ly) ✨ NOVO
+
+## ✨ Novidades v2.3.1
+
+- 🔵 **Extrator Kabum**
+  - Suporte completo para Kabum.com.br (5ª plataforma)
+  - Resolução de links encurtados (tidd.ly)
+  - Extração via JSON-LD (Schema.org) para máxima confiabilidade
+  - **Até 11 imagens de alta qualidade** por produto
+  - **Marca e SKU** extraídos automaticamente
+  - **Avaliações completas** (nota + quantidade)
+  - Descrição detalhada (500 chars), disponibilidade e categoria
+
+## ✨ Novidades v2.3.0
+
+- 📊 **Sistema Completo de Analytics**
+  - Rastreamento de cliques em ofertas com origem
+  - Rastreamento de visualizações de páginas
+  - Métricas detalhadas por oferta (total, por fonte, por dia)
+  - Dashboard de analytics com top 10 ofertas e páginas mais vistas
+  - 4 novos endpoints públicos
+  - 2 novos modelos: OfferClick e PageView
+  - Campo `total_clicks` nas ofertas
 
 ## ✨ Novidades v2.2.2
 
@@ -17,6 +40,11 @@ Extração automática de ofertas de:
   - Resolução automática de links encurtados (amzn.to)
   - Extração de avaliações, reviews e disponibilidade
   - Até 10 imagens por produto em alta qualidade
+
+- 📊 **Melhorias Backend (Fase 1)**
+  - Auto-aprovação de ofertas por canal
+  - Contador de posts e estatísticas de canais
+  - Título da oferta nos endpoints de posts
 
 ## ✨ Novidades v2.2.1
 
@@ -117,6 +145,15 @@ pytest --cov=app --cov-report=html
 
 # Ver relatório HTML
 open htmlcov/index.html  # ou abra manualmente no navegador
+
+# Testar extrator Kabum
+python test_kabum.py
+
+# Testar Fase 1 (Backend Issues)
+python test_phase1.py
+
+# Testar Fase 2 (Analytics)
+python test_phase2.py
 ```
 
 ## 📚 Documentação
@@ -180,13 +217,71 @@ Authorization: Bearer {access_token}
 
 Ver documentação completa em `SECURITY_FIXES_SUMMARY.md`
 
+## 📊 Sistema de Analytics (v2.3.0)
+
+### Endpoints Disponíveis
+
+**POST /analytics/click** - Registrar clique em oferta
+```json
+{
+  "offer_id": "673a5e8f...",
+  "source": "home"  // home, ofertas, dashboard, etc
+}
+```
+
+**POST /analytics/pageview** - Registrar visualização de página
+```json
+{
+  "page": "home"  // home, ofertas, cupons, etc
+}
+```
+
+**GET /analytics/offer/{offer_id}** - Métricas de oferta
+```json
+{
+  "offer_id": "...",
+  "offer_title": "Produto XYZ",
+  "total_clicks": 245,
+  "clicks_by_source": {"home": 120, "ofertas": 100},
+  "clicks_by_day": [{"date": "2025-11-01", "clicks": 45}],
+  "last_30_days": 245
+}
+```
+
+**GET /analytics/summary** - Resumo geral
+```json
+{
+  "total_offer_clicks": 1234,
+  "total_page_views": 5678,
+  "most_clicked_offers": [...],
+  "most_viewed_pages": {"home": 2500},
+  "clicks_last_7_days": 456,
+  "views_last_7_days": 1234
+}
+```
+
+### Como Usar
+
+```bash
+# Registrar clique
+curl -X POST http://localhost:8000/analytics/click \
+  -H "Content-Type: application/json" \
+  -d '{"offer_id": "123", "source": "home"}'
+
+# Ver métricas de oferta
+curl http://localhost:8000/analytics/offer/123
+
+# Ver resumo geral
+curl http://localhost:8000/analytics/summary
+```
+
 ## 🆕 Novidades v2.1.0
 
 ### ✨ Features
 - 🔐 Autenticação JWT completa
-- � **Sistema completo de gerenciamento de arquivos** (upload, download, organização, limpeza) ✨ NOVO
-- 🖼️ **Extração de múltiplas imagens por produto** (até 10 imagens) ✨ NOVO
-- �📊 Histórico de preços com 4 endpoints
+- 📁 **Sistema completo de gerenciamento de arquivos** (upload, download, organização, limpeza)
+- 🖼️ **Extração de múltiplas imagens por produto** (até 10 imagens)
+- 📊 Histórico de preços com 4 endpoints
 - 🤖 Categorização automática com IA (16 categorias)
 - 🏷️ **Geração automática de tags com IA** (máximo 5 tags inteligentes por oferta)
 - ⚡ Cache Redis (TTL 1h)
@@ -229,7 +324,9 @@ app/
 │   ├── site_config.py
 │   ├── coupon.py
 │   ├── price_history.py
-│   └── file_storage.py    # ✨ NOVO
+│   ├── file_storage.py
+│   ├── offer_click.py     # ✨ NOVO v2.3.0
+│   └── page_view.py       # ✨ NOVO v2.3.0
 ├── routes/                # Endpoints
 │   ├── offers.py
 │   ├── posts.py
@@ -240,14 +337,25 @@ app/
 │   ├── coupons.py
 │   ├── health.py
 │   ├── price_history.py
-│   └── files.py           # ✨ NOVO
+│   ├── files.py
+│   └── analytics.py       # ✨ NOVO v2.3.0
 ├── services/
 │   ├── offer_extractor/   # Web scraping
+│   │   ├── base.py
+│   │   ├── factory.py
+│   │   ├── mercadolivre.py
+│   │   ├── shopee.py
+│   │   ├── aliexpress.py
+│   │   ├── amazon.py
+│   │   └── kabum.py       # ✨ NOVO v2.3.1
 │   ├── ai_categorization.py  # OpenAI IA categorização + tags
-│   └── file_storage.py    # ✨ NOVO
+│   └── file_storage.py
 └── tests/
     ├── conftest.py
-    └── test_api.py
+    ├── test_api.py
+    ├── test_phase1.py
+    ├── test_phase2.py
+    └── test_kabum.py      # ✨ NOVO v2.3.1
 ```
 
 ## 🏷️ Exemplos de Tags Geradas pela IA
@@ -299,5 +407,5 @@ MIT
 
 ---
 
-**Versão**: 2.2.2  
-**Última atualização**: 2025-11-06
+**Versão**: 2.3.0  
+**Última atualização**: 2025-11-10

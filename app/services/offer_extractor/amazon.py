@@ -144,63 +144,106 @@ class AmazonExtractor(BaseExtractor):
                     features = [bullet.text().strip() for bullet in feature_bullets if bullet.text().strip()]
                     description = " | ".join(features[:3])  # Primeiras 3 features
 
-            # Extrair imagens
+            # Extrair imagens - sistema aprimorado para evitar duplicatas
             images = []
+            image_ids = set()  # Para rastrear IDs únicos de imagens (parte do nome do arquivo)
+            
+            def extract_image_id(url):
+                """Extrai ID único da imagem Amazon (ex: 51abc123.jpg -> 51abc123)"""
+                # Buscar padrão de ID de imagem: letras/números antes da extensão
+                match = re.search(r'/([A-Z0-9+\-]{10,})[\._]', url)
+                if match:
+                    return match.group(1)
+                # Fallback: pegar o nome do arquivo
+                match = re.search(r'/([^/]+)\.(jpg|jpeg|png|gif|webp)', url, re.IGNORECASE)
+                return match.group(1) if match else url
+            
+            def add_image(img_url):
+                """Adiciona imagem se não for duplicata"""
+                if not img_url or not img_url.startswith("http"):
+                    return False
+                
+                # Filtrar imagens inválidas (gifs transparentes, play buttons, etc)
+                lower_url = img_url.lower()
+                invalid_patterns = ['transparent-pixel', 'play-button', 'pkplay-button', '.gif']
+                if any(pattern in lower_url for pattern in invalid_patterns):
+                    return False
+                
+                # Normalizar para alta qualidade (todas as variações de tamanho → _SL1500_)
+                # Padrões comuns da Amazon:
+                # ._SS100_ ._AC_US100_ ._AC_UL348_SR348,348_ ._AC_SR38,50_ ._AC_SX425_ -> ._SL1500_
+                img_url = re.sub(r'\._(?:SS|AC_(?:US|UL|SL|SR|SX|SY))\d+(?:_SR\d+,\d+|,\d+)?_', '._SL1500_', img_url)
+                
+                # Remover sufixos .SS\d+ sem underscore
+                img_url = re.sub(r'\.SS\d+_', '._SL1500_', img_url)
+                
+                # Verificar se já temos essa imagem (por ID)
+                img_id = extract_image_id(img_url)
+                if img_id in image_ids:
+                    return False
+                
+                image_ids.add(img_id)
+                images.append(img_url)
+                return True
             
             # 1. Imagem principal do og:image
             og_image = html.css_first("meta[property='og:image']")
             if og_image:
                 main_image = og_image.attributes.get("content", "")
                 if main_image:
-                    images.append(main_image)
+                    add_image(main_image)
             
-            # 2. Tentar pegar do JSON de imagens (imageBlock)
-            scripts = html.css("script[type='text/javascript']")
-            for script in scripts:
-                script_text = script.text()
-                if "'colorImages'" in script_text or '"colorImages"' in script_text:
-                    # Tentar extrair URLs de imagens do JSON
-                    try:
-                        # Buscar padrão de URLs de imagens Amazon
-                        image_urls = re.findall(r'https://m\.media-amazon\.com/images/I/[^"\']+\.jpg', script_text)
-                        for img_url in image_urls:
-                            # Pegar versão de alta qualidade
-                            if img_url not in images:
-                                images.append(img_url)
-                    except Exception as e:
-                        logger.warning(f"Erro ao extrair imagens do JSON: {e}")
-            
-            # 3. Imagens da galeria (thumbs e principais)
-            image_thumbs = html.css("img.a-dynamic-image")
-            for img in image_thumbs:
-                img_src = img.attributes.get("src", "") or img.attributes.get("data-old-hires", "") or img.attributes.get("data-a-dynamic-image", "")
+            # 2. Imagens do atributo data-a-dynamic-image (mais confiável)
+            dynamic_images = html.css("img.a-dynamic-image")
+            for img in dynamic_images:
+                # Priorizar data-old-hires (imagem grande)
+                img_src = img.attributes.get("data-old-hires", "")
+                if img_src:
+                    add_image(img_src)
+                    continue
                 
-                # Se data-a-dynamic-image for JSON, extrair a primeira URL
-                if img_src.startswith("{"):
+                # Tentar data-a-dynamic-image (JSON com múltiplas resoluções)
+                img_data = img.attributes.get("data-a-dynamic-image", "")
+                if img_data and img_data.startswith("{"):
                     try:
-                        img_data = json.loads(img_src)
-                        img_src = list(img_data.keys())[0] if img_data else ""
+                        img_dict = json.loads(img_data)
+                        # Pegar a maior resolução (primeira chave geralmente)
+                        if img_dict:
+                            largest_url = max(img_dict.keys(), key=lambda k: int(img_dict[k][0]) * int(img_dict[k][1]))
+                            add_image(largest_url)
+                            continue
                     except:
                         pass
                 
-                if img_src and img_src not in images and img_src.startswith("http"):
-                    images.append(img_src)
-            
-            # 4. Imagens do carousel
-            li_images = html.css("#altImages ul li.imageThumbnail img")
-            for img in li_images:
+                # Fallback: src normal
                 img_src = img.attributes.get("src", "")
                 if img_src:
-                    # Converter thumbnail para imagem grande
-                    # Amazon usa padrão: ._SS40_ (thumb) -> ._SL1500_ (grande)
-                    img_src = re.sub(r'\._[A-Z]{2}\d+_', '._SL1500_', img_src)
-                    if img_src not in images:
-                        images.append(img_src)
+                    add_image(img_src)
             
-            # Limpar duplicatas e limitar quantidade
-            images = list(dict.fromkeys(images))[:10]
+            # 3. Imagens do carousel/thumbnails
+            carousel_images = html.css("#altImages ul li img, .imageThumbnail img")
+            for img in carousel_images:
+                img_src = img.attributes.get("src", "")
+                if img_src:
+                    add_image(img_src)
             
-            logger.info(f"Amazon: Extraídas {len(images)} imagens do produto")
+            # 4. Buscar no JSON de scripts (fallback adicional)
+            if len(images) < 5:
+                scripts = html.css("script[type='text/javascript']")
+                for script in scripts:
+                    script_text = script.text()
+                    if "'colorImages'" in script_text or '"colorImages"' in script_text:
+                        try:
+                            # Buscar URLs de imagens no padrão Amazon
+                            image_urls = re.findall(r'https://m\.media-amazon\.com/images/I/[A-Z0-9+\-]+\._[A-Z]{2}\d+_\.jpg', script_text)
+                            for img_url in image_urls:
+                                if add_image(img_url):
+                                    if len(images) >= 15:
+                                        break
+                        except Exception as e:
+                            logger.warning(f"Erro ao extrair imagens do JSON: {e}")
+            
+            logger.info(f"Amazon: Extraídas {len(images)} imagens únicas do produto")
 
             # Extrair avaliação
             rating = ""

@@ -3,7 +3,7 @@ version: "3.9"
 services:
   # Backend FastAPI
   backend:
-    image: acthiago/api-bff-ecossistema:2.2.2
+    image: acthiago/api-bff-ecossistema:2.3.1
     container_name: ecosystem_backend
     ports:
       - "8000:8000"

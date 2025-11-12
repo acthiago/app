@@ -9,6 +9,8 @@ from app.models.site_config import SiteConfig
 from app.models.coupon import Coupon
 from app.models.price_history import PriceHistory
 from app.models.file_storage import FileStorage
+from app.models.offer_click import OfferClick
+from app.models.page_view import PageView
 import os
 from dotenv import load_dotenv
 
@@ -22,7 +24,10 @@ async def init_db():
     db = client[mongo_db]
     await init_beanie(
         database=db, 
-        document_models=[Offer, Post, User, Affiliate, Channel, SiteConfig, Coupon, PriceHistory, FileStorage]
+        document_models=[
+            Offer, Post, User, Affiliate, Channel, SiteConfig, 
+            Coupon, PriceHistory, FileStorage, OfferClick, PageView
+        ]
     )
     print("✅ MongoDB conectado com sucesso")
 

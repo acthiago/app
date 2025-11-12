@@ -17,7 +17,7 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "2.2.2"
+        "version": "2.3.1"
     }
 
 
@@ -42,7 +42,7 @@ async def detailed_health_check():
     return {
         "status": "healthy" if overall_healthy else "degraded",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "2.2.2",
+        "version": "2.3.1",
         "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
         "services": {
             "mongodb": db_status,
@@ -58,6 +58,8 @@ async def detailed_health_check():
             "file_management": True,
             "multi_image_extraction": True,
             "auto_cleanup_scheduler": True,
-            "amazon_extractor": True
+            "amazon_extractor": True,
+            "analytics_system": True,
+            "kabum_extractor": True
         }
     }

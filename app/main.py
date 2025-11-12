@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.routes import offers, posts, users, affiliates, channels, site_config, coupons, health, price_history, files
+from app.routes import offers, posts, users, affiliates, channels, site_config, coupons, health, price_history, files, analytics
 from app.core.database import init_db
 from app.core.cache import init_redis, close_redis
 from app.core.logging import configure_logging, get_logger
@@ -20,8 +20,8 @@ limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="Ecosystem Backend",
-    version="2.2.2",
-    description="Backend completo com JWT, cache Redis, rate limiting, logs estruturados, IA e gerenciamento de arquivos."
+    version="2.3.1",
+    description="Backend completo com JWT, cache Redis, rate limiting, logs estruturados, IA, gerenciamento de arquivos, sistema de analytics e suporte a 5 plataformas (ML, Shopee, AliExpress, Amazon, Kabum)."
 )
 
 # Adicionar rate limiter ao app
@@ -65,9 +65,10 @@ app.include_router(site_config.router)
 app.include_router(coupons.router)
 app.include_router(price_history.router)
 app.include_router(files.router)
+app.include_router(analytics.router)
 
 @app.get("/")
 def root():
-    return {"message": "Ecosystem API Online 🚀", "version": "2.2.2"}
+    return {"message": "Ecosystem API Online 🚀", "version": "2.3.1"}
 
 
